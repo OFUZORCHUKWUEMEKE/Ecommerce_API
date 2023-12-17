@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class UsersService {
-    async handleLogin(username:string,password:string){
+    async handleLogin({username,password}){
 
     }
 }

@@ -20,6 +20,6 @@ export class CreateUser {
 
     @IsOptional()
     @IsString()
-    secretToken: string
+    secretToken?: string
 
 }
