@@ -1,4 +1,5 @@
-import { IsNotEmpty, IsString,IsIn,IsOptional } from "class-validator/types/decorator/decorators";
+
+import { IsIn, IsNotEmpty, IsOptional, IsString } from "class-validator";
 import { userTypes } from "src/shared/schema/user";
 export class CreateUser {
 
