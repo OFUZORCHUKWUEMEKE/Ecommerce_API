@@ -16,11 +16,13 @@ export class CreateUser {
     password: string;
 
     @IsNotEmpty()
-    @IsIn([userTypes.ADMIN,userTypes.CUSTOMER])
+    @IsIn([userTypes.ADMIN, userTypes.CUSTOMER])
     type: string
 
     @IsOptional()
     @IsString()
     secretToken?: string;
+
+    isVerified?: boolean
 
 }
