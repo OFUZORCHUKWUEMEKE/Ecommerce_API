@@ -1,18 +1,19 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, HttpException, BadRequestException, NotFoundException } from '@nestjs/common';
 import { CreateUser } from './dto/create-user.dto';
-import { userTypes } from 'src/shared/schema/user';
+import { User, UserSchema, userTypes } from 'src/shared/schema/user';
 import configuration from 'src/config/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { UserRepository } from 'src/shared/repositories/user.repositories';
 import { sendEmail } from 'src/shared/utility/mail-handler';
 import { comparePassword, generatePassword } from 'src/shared/utility/password.manager';
 import { JwtService } from '@nestjs/jwt';
+import { Model } from 'mongoose';
 
 const config = configuration()
 
 @Injectable()
 export class UsersService {
-    constructor(@Inject(UserRepository) private readonly userDB: UserRepository, private readonly jwtService: JwtService) {}
+    constructor(@Inject(UserRepository) private readonly userDB: UserRepository, private readonly jwtService: JwtService, @InjectModel(User.name) private userRepo: Model<User>) { }
     async Create(credentials: CreateUser) {
         try {
             //    generate the hash password
@@ -20,12 +21,15 @@ export class UsersService {
 
             if (credentials.type === userTypes.ADMIN && credentials.secretToken !== config.adminSecretToken) {
                 throw new Error("Not allowed to create admin")
-            } else if(credentials.type!==userTypes.CUSTOMER) {
+            } else if (credentials.type !== userTypes.CUSTOMER) {
                 credentials.isVerified = true
             }
             const user = await this.userDB.findOne({
                 email: credentials.email
             })
+            // const user = await this.userRepo.findOne({
+            //     email:credentials.email
+            // })
             if (user) {
                 throw new Error("User Already Exist")
             }
@@ -64,19 +68,22 @@ export class UsersService {
 
     async handleLogin(email: string, password) {
         try {
-            const userExist = await this.userDB.findOne(email)
+            // const userExist = await this.userDB.findOne(email)
+            const userExist = await this.userRepo.findOne({
+                email: email
+            })
             if (!userExist) {
                 throw new Error("User not found")
             }
-            if (!userExist.isverified) {
-                throw new Error("Please verify your email")
-            }
+            // if (!userExist.isverified) {
+            //     throw new Error("Please verify your email")
+            // }
             const isPasswordMatch = await comparePassword(password, userExist.password)
 
             if (!isPasswordMatch) {
                 throw new Error("Invalid email or password")
             }
-            const token = await this.jwtService.sign(userExist._id)
+            const token = await this.jwtService.sign({ _id: userExist._id })
 
             return {
                 success: true,
@@ -92,8 +99,64 @@ export class UsersService {
                 }
             }
         } catch (error) {
-            throw new Error(error)
+            throw new HttpException(error, 400)
         }
 
     }
+
+    async verifyEmail(otp: string, email: string) {
+        try {
+            const user = await this.userRepo.findOne({
+                email: email
+            })
+            if (!user) {
+                throw new NotFoundException('User Not Found')
+            }
+            if (user.otp !== otp) {
+                throw new Error('Invalid OTP')
+            }
+            if (user.otpExpiryTime < new Date()) {
+                throw new Error('Otp Expired')
+            }
+            await this.userRepo.updateOne({
+                email
+            }, { isverified: true })
+            user.isverified = true
+            await user.save()
+            return {
+                success: true,
+                message: 'Email verified Successfully'
+            }
+        } catch (error) {
+            throw new BadRequestException()
+        }
+    }
+
+    async sendOtpEmail(email: string) {
+        try {
+            const user = await this.userRepo.findOne({
+                email
+            })
+            const otp = Math.floor(Math.random() * 900000) + 100000
+
+            const otpExpiryTime = new Date()
+
+            otpExpiryTime.setMinutes(otpExpiryTime.getMinutes() + 10)
+            if (!user) {
+                throw new NotFoundException()
+            }
+            if (!user.isverified) {
+                throw new BadRequestException()
+            }
+            await this.userRepo.updateOne({
+                email
+            }, { otp, otpExpiryTime })
+
+            // SEND OTP TO CORRESPONDING EMAIL ADDRESS
+            // sendEmail()
+        } catch (error) {
+
+        }
+    }
 }
+

@@ -14,4 +14,8 @@ export class UserRepository {
     async create(data) {
         return await this.userModel.create(data)
     }
+
+    async updateOne(query:any,data:Record<string,any>){
+        return await this.userModel.updateOne(query,data)
+    }
 } 

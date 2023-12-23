@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Res } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Res } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { Response } from 'express';
 import { CreateUser } from './dto/create-user.dto';
@@ -27,8 +27,13 @@ export class UsersController {
       return loginres
    }
 
+   @Get('/verify-email/:otp/:email')
+   async verifyEmail(@Param('otp') otp:string,@Param('email') email:string){
+         return await this.usersService.verifyEmail(otp,email)
+   }
+
    @Post('/create')
    async register(@Body() body: CreateUser) {
-      return await this.usersService.Create(body)
+      return await this.usersService.Create(body)  
    }
 }
