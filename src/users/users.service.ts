@@ -46,13 +46,13 @@ export class UsersService {
                 otpExpiryTime
             })
 
-            if (newUser.type !== userTypes.ADMIN) {
-                sendEmail(newUser.email, 'Verify Email Template', 'Email verification - Digizone', {
-                    customerName: newUser.name,
-                    customerEmail: newUser.email,
-                    otp
-                })
-            }
+            // if (newUser.type !== userTypes.ADMIN) {
+            //     sendEmail(newUser.email, 'Verify Email Template', 'Email verification - Digizone', {
+            //         customerName: newUser.name,
+            //         customerEmail: newUser.email,
+            //         otp
+            //     })
+            // }
             return {
                 success: true,
                 message: newUser.type === userTypes.ADMIN ? 'Admin Created' : "Please activate your acccont by verifying your email.",
@@ -156,6 +156,34 @@ export class UsersService {
             // sendEmail()
         } catch (error) {
 
+        }
+    }
+
+    async forgotpassword(email:string){
+        try {
+            const userExist = await this.userRepo.findOne({
+                email:email
+            })
+            if(!userExist){
+                throw new NotFoundException()
+            }
+            let password = Math.random().toString(36).substring(2,12)
+            password = await generatePassword(password)
+            await this.userRepo.updateOne({
+                _id:userExist._id
+            },{
+                password
+            }) 
+            // SEND CUSTOMER EMAIL
+            // sendEmail()
+            return {
+                success:true,
+                message:'Password sent to your email',
+                result:{email:userExist.email,password
+                }
+            }
+        } catch (error) {
+            
         }
     }
 }

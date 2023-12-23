@@ -48,6 +48,10 @@ export class UsersController {
       return res.status(HttpStatus.OK).json({
          success:true
       })
+   }
 
+   @Get('forgot-password/:email')
+   async forgotpassword(@Param('email') email:string){
+      return this.usersService.forgotpassword(email)
    }
 }
