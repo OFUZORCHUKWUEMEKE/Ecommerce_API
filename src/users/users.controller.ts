@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Res } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Put, Res } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { Response } from 'express';
 import { CreateUser } from './dto/create-user.dto';
@@ -32,8 +32,22 @@ export class UsersController {
          return await this.usersService.verifyEmail(otp,email)
    }
 
+   @Get('/send-otp-email/:email')
+   async sendOtpEmail(@Param('email') email:string){
+       
+   } 
+
    @Post('/create')
    async register(@Body() body: CreateUser) {
       return await this.usersService.Create(body)  
+   }
+
+   @Put('/logout')
+   async logout(@Res() res:Response){
+      res.clearCookie('_digi_auth_token')
+      return res.status(HttpStatus.OK).json({
+         success:true
+      })
+
    }
 }
