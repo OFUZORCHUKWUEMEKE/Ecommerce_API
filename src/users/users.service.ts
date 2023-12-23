@@ -12,7 +12,7 @@ const config = configuration()
 
 @Injectable()
 export class UsersService {
-    constructor(@Inject(UserRepository) private readonly userDB: UserRepository, private readonly jwtService: JwtService) { }
+    constructor(@Inject(UserRepository) private readonly userDB: UserRepository, private readonly jwtService: JwtService) {}
     async Create(credentials: CreateUser) {
         try {
             //    generate the hash password
@@ -20,7 +20,7 @@ export class UsersService {
 
             if (credentials.type === userTypes.ADMIN && credentials.secretToken !== config.adminSecretToken) {
                 throw new Error("Not allowed to create admin")
-            } else {
+            } else if(credentials.type!==userTypes.CUSTOMER) {
                 credentials.isVerified = true
             }
             const user = await this.userDB.findOne({
