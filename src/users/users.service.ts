@@ -56,7 +56,7 @@ export class UsersService {
             }
 
         } catch (error) {
-            throw error
+            return 'An error occcured'
         }
         // user is already exist
 
