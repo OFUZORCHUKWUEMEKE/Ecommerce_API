@@ -8,6 +8,7 @@ import { sendEmail } from 'src/shared/utility/mail-handler';
 import { comparePassword, generatePassword } from 'src/shared/utility/password.manager';
 import { JwtService } from '@nestjs/jwt';
 import { Model } from 'mongoose';
+import { Await } from 'react-router-dom';
 
 const config = configuration()
 
@@ -159,31 +160,51 @@ export class UsersService {
         }
     }
 
-    async forgotpassword(email:string){
+    async forgotpassword(email: string) {
         try {
             const userExist = await this.userRepo.findOne({
-                email:email
+                email: email
             })
-            if(!userExist){
+            if (!userExist) {
                 throw new NotFoundException()
             }
-            let password = Math.random().toString(36).substring(2,12)
+            let password = Math.random().toString(36).substring(2, 12)
             password = await generatePassword(password)
             await this.userRepo.updateOne({
-                _id:userExist._id
-            },{
+                _id: userExist._id
+            }, {
                 password
-            }) 
+            })
             // SEND CUSTOMER EMAIL
             // sendEmail()
             return {
-                success:true,
-                message:'Password sent to your email',
-                result:{email:userExist.email,password
+                success: true,
+                message: 'Password sent to your email',
+                result: {
+                    email: userExist.email, password
                 }
             }
         } catch (error) {
-            
+
+        }
+    }
+
+    async getUserType(type: string) {
+        const users = await this.userRepo.find({
+            type
+        })
+        console.log(users)
+        return 'successsfully'
+    }
+
+    async findAllUsers() {
+         
+        const users = await this.userRepo.find({})
+        // console.log(users)
+        return {
+            message:{
+                users
+            }
         }
     }
 }
